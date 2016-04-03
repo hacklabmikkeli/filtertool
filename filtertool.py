@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from pylab import *
+from matplotlib import animation
 import matplotlib.pyplot as pyplot
 import struct
 import socket
@@ -50,25 +51,22 @@ def calculate_fft(signal):
 class FilterTool:
 
     def __init__(self):
-        self.signal_subplot = None
-        self.ampl_subplot = None
-        self.phase_subplot = None
+        self.figure = pyplot.figure()
+        self.signal_subplot = self.figure.add_subplot(3,1,1)
+        self.ampl_subplot = self.figure.add_subplot(3,1,2)
+        self.phase_subplot = self.figure.add_subplot(3,1,3)
 
-    def run_once(self):
+    def run(self):
+        ani = animation.FuncAnimation(self.figure, self._run_once, interval=1000)
+        show()
+
+    def _run_once(self, i):
         data = get_data()
         _1, _2, signal = parse_data(data)
         ampl, phase = calculate_fft(signal)
         self.plot(signal, ampl, phase)
 
     def plot(self, signal_data, ampl_data, phase_data):
-        figure = pyplot.figure()
-        if self.signal_subplot is None:
-            self.signal_subplot = figure.add_subplot(3,1,1)
-        if self.ampl_subplot is None:
-            self.ampl_subplot = figure.add_subplot(3,1,2)
-        if self.phase_subplot is None:
-            self.phase_subplot = figure.add_subplot(3,1,3)
-
         self.signal_subplot.clear()
         self.ampl_subplot.clear()
         self.phase_subplot.clear()
@@ -83,9 +81,6 @@ class FilterTool:
         self.phase_subplot.set_yscale('linear')
         self.phase_subplot.set_xscale('log')
 
-        show()
-
 if __name__ == "__main__":
     ft = FilterTool()
-    ft.run_once()
-
+    ft.run()
