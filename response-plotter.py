@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-#     Filtertool - plot frequency response graphs
+#     response-plotter.py - plot frequency response graphs
 #     Copyright (C) 2016 Ilmo Euro
 # 
 #     This program is free software: you can redistribute it and/or modify
@@ -32,16 +32,12 @@ def get_data():
     sock = socket.socket()
     sock.connect(('10.0.0.3', 3001))
     sock.sendall(b"STARTBIN")
-    sock.settimeout(0.1)
     data = b''
-    try:
+    while True:
         recvd = sock.recv(4096)
-        while len(recvd) > 0:
-            print(recvd)
-            recvd = sock.recv(4096)
-            data = data + recvd
-    except socket.timeout:
-        pass
+        data = data + recvd
+        if len(recvd) < 4096:
+            break
     sock.close()
     return data
 
@@ -50,10 +46,9 @@ def parse_data(data):
     header = data[:0x50]
     payload = data[0x51:]
 
-    print(header)
-    print(payload)
-
-    (time_div, volts_div) = struct.unpack(HEADER_FMT, header)
+    (time_div_encoded, volts_div_encoded) = struct.unpack(HEADER_FMT, header)
+    time_div = (1,2,4)[time_div_encoded % 3] * 10 ** (time_div_encoded // 3)
+    volts_div = (1,2,5)[volts_div_encoded % 3] * 10 ** (volts_div_encoded // 3)
     signal = (x[0] for x in struct.iter_unpack(DATA_FMT, payload))
     
     return (time_div, volts_div, fromiter(signal, int16))
@@ -96,6 +91,7 @@ class FilterTool:
 
         self.phase_subplot.set_yscale('linear')
         self.phase_subplot.set_xscale('log')
+
 
 if __name__ == "__main__":
     ft = FilterTool()
