@@ -60,9 +60,8 @@ def parse_data(data):
 
 
 def calculate_fft(signal):
-    length = len(signal)
-    signal = rfft(signal)
-    return (abs(signal), angle(signal))
+    fft_signal = rfft(signal)
+    return (abs(fft_signal), angle(fft_signal))
 
 
 class FilterTool:
